@@ -1,4 +1,4 @@
-package hello;
+package com.phh.storyserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

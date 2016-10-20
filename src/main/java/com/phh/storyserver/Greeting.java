@@ -1,4 +1,4 @@
-package hello;
+package com.phh.storyserver;
 
 public class Greeting {
 
