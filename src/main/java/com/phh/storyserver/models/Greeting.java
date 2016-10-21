@@ -1,4 +1,4 @@
-package com.phh.storyserver;
+package com.phh.storyserver.models;
 
 public class Greeting {
 
