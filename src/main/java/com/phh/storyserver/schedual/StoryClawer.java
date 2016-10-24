@@ -9,7 +9,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,12 +40,12 @@ public class StoryClawer {
         result.stream().forEach(item -> {
             log.info("Claw Story: " + item.get("title"));
             String linkFirstChap = clawStory(item);
-            clawChap(item, linkFirstChap);
-            try {
-                Thread.sleep(120000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            clawChap(item, linkFirstChap);
+//            try {
+//                Thread.sleep(120000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         });
         log.info("Finish");
     }
@@ -84,7 +88,8 @@ public class StoryClawer {
         String url = WEB_LINK + params.get("link");
         String linkFirstChap = "";
         try {
-            String filePath = FOLDER_PATH + "/" + params.get("link").substring(8) + "/desc.txt";
+            String folderPath = FOLDER_PATH + "/" + params.get("link").substring(8);
+            String filePath = folderPath + "/desc.txt";
             Writer out = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(filePath), "UTF-8"));
             Document doc = Jsoup.connect(url).userAgent("Mozilla").get();
@@ -103,6 +108,10 @@ public class StoryClawer {
                 }
             });
             out.close();
+
+            String linkImage = doc.select(".thumbnail img").attr("src");
+            log.info("link image = " + linkImage);
+            saveImageToFile(linkImage, folderPath);
 
             Elements chapList = doc.select("#dschuong div");
             linkFirstChap = chapList.get(0).select("a[href]").attr("href");
@@ -141,6 +150,19 @@ public class StoryClawer {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveImageToFile(String link, String folderPath) {
+        try {
+            URL url = new URL("http:" + link);
+            HttpURLConnection httpcon = (HttpURLConnection) url.openConnection();
+            httpcon.addRequestProperty("User-Agent", "");
+            BufferedImage image = ImageIO.read(httpcon.getInputStream());
+            File outputfile = new File(folderPath + "/cover_image.jpg");
+            ImageIO.write(image, "jpg", outputfile);
+        } catch(IOException e){
             e.printStackTrace();
         }
     }
