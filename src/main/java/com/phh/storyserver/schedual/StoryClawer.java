@@ -40,12 +40,12 @@ public class StoryClawer {
         result.stream().forEach(item -> {
             log.info("Claw Story: " + item.get("title"));
             String linkFirstChap = clawStory(item);
-//            clawChap(item, linkFirstChap);
-//            try {
-//                Thread.sleep(120000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            clawChap(item, linkFirstChap);
+            try {
+                Thread.sleep(120000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         });
         log.info("Finish");
     }
@@ -57,7 +57,7 @@ public class StoryClawer {
             folder.mkdir();
         }
 
-        for(int i = 1; i <=1; i++) {
+        for(int i = 1; i <=2; i++) {
             try {
                 String origin_url = WEB_LINK + "truyen-ngon-tinh/";
                 String url = origin_url + "?page=" + i;
@@ -93,6 +93,9 @@ public class StoryClawer {
             Writer out = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(filePath), "UTF-8"));
             Document doc = Jsoup.connect(url).userAgent("Mozilla").get();
+            String title = doc.select(".rofx h1").get(0).toString();
+            out.write("Title:" + title);
+            out.write(System.getProperty("line.separator"));
             String desc = doc.select("#desc_story p").toString();
             out.write("Description:" + desc);
             out.write(System.getProperty("line.separator"));
