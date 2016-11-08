@@ -41,11 +41,11 @@ public class StoryClawer {
             log.info("Claw Story: " + item.get("title"));
             String linkFirstChap = clawStory(item);
             clawChap(item, linkFirstChap);
-            try {
-                Thread.sleep(120000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(120000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         });
         log.info("Finish");
     }
@@ -57,7 +57,7 @@ public class StoryClawer {
             folder.mkdir();
         }
 
-        for(int i = 1; i <=2; i++) {
+        for(int i = 1; i <=1; i++) {
             try {
                 String origin_url = WEB_LINK + "truyen-ngon-tinh/";
                 String url = origin_url + "?page=" + i;
@@ -135,12 +135,15 @@ public class StoryClawer {
                 Document doc = Jsoup.connect(linkChap).userAgent("Mozilla").get();
                 Writer out = new BufferedWriter(new OutputStreamWriter(
                         new FileOutputStream(filePath), "UTF-8"));
+                String title = doc.select("#noidungtruyen h1").text();
                 String chapContent = doc.select("#id_noidung_chuong").toString();
                 log.info("chapContent length = " + chapContent.length());
                 if(chapContent.length() < 400) {
                     Thread.sleep(120000);
                     continue;
                 }
+                out.write(title);
+                out.write(System.getProperty("line.separator"));
                 out.write(chapContent);
                 out.close();
                 i++;
