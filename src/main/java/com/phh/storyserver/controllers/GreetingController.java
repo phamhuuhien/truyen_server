@@ -2,7 +2,8 @@ package com.phh.storyserver.controllers;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.phh.storyserver.models.Greeting;
+import com.phh.storyserver.models.Story;
+import com.phh.storyserver.repositories.StoryRepository;
 import com.phh.storyserver.schedual.StoryClawer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,10 +19,15 @@ public class GreetingController {
     @Autowired
     StoryClawer storyClawer;
 
+    @Autowired
+    StoryRepository storyRepository;
+
     @RequestMapping("/greeting")
-    public Greeting greeting(@RequestParam(value="name", defaultValue="World") String name) {
+    public String greeting(@RequestParam(value="name", defaultValue="World") String name) {
         storyClawer.reportCurrentTime();
-        return new Greeting(counter.incrementAndGet(),
-                            String.format(template, name));
+        Story story = new Story();
+        story.setName("Check choi");
+        storyRepository.save(story);
+        return "Hello";
     }
 }

@@ -1,11 +1,17 @@
 package com.phh.storyserver.schedual;
 
+import com.phh.storyserver.models.Chap;
+import com.phh.storyserver.models.Story;
+import com.phh.storyserver.repositories.ChapRepository;
+import com.phh.storyserver.repositories.StoryRepository;
+import javafx.util.Pair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -32,15 +38,20 @@ public class StoryClawer {
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
+    @Autowired
+    private StoryRepository storyRepository;
 
-    @Scheduled(cron = "0 51 17 * * *")
+    @Autowired
+    private ChapRepository chapRepository;
+
+    @Scheduled(cron = "0 0 0 * * *")
     public void reportCurrentTime() {
         log.info("The time is now {}", dateFormat.format(new Date()));
         List<HashMap<String, String>> result = createFolder();
         result.stream().forEach(item -> {
             log.info("Claw Story: " + item.get("title"));
-            String linkFirstChap = clawStory(item);
-            clawChap(item, linkFirstChap);
+            Pair data = clawStory(item);
+            clawChap(item, (String)data.getKey(), (Story)data.getValue());
 //            try {
 //                Thread.sleep(120000);
 //            } catch (InterruptedException e) {
@@ -84,16 +95,17 @@ public class StoryClawer {
         return result;
     }
 
-    private String clawStory(HashMap<String, String> params) {
+    private Pair<String, Story> clawStory(HashMap<String, String> params) {
         String url = WEB_LINK + params.get("link");
         String linkFirstChap = "";
+        Story story = new Story();
         try {
             String folderPath = FOLDER_PATH + "/" + params.get("link").substring(8);
             String filePath = folderPath + "/desc.txt";
             Writer out = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(filePath), "UTF-8"));
             Document doc = Jsoup.connect(url).userAgent("Mozilla").get();
-            String title = doc.select(".rofx h1").get(0).toString();
+            String title = doc.select(".rofx h1").get(0).text();
             out.write("Title:" + title);
             out.write(System.getProperty("line.separator"));
             String desc = doc.select("#desc_story p").toString();
@@ -118,14 +130,20 @@ public class StoryClawer {
 
             Elements chapList = doc.select("#dschuong div");
             linkFirstChap = chapList.get(0).select("a[href]").attr("href");
+
+
+            story.setName(title);
+            story.setDes(desc);
+            storyRepository.save(story);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return linkFirstChap;
+        return new Pair<>(linkFirstChap, story);
     }
 
-    private void clawChap(HashMap<String, String> params, String linkFirstChap) {
+    private void clawChap(HashMap<String, String> params, String linkFirstChap, Story story) {
         String linkChap = linkFirstChap;
         try {
             int i = 1;
@@ -153,6 +171,13 @@ public class StoryClawer {
                 if(!lastNavigation.text().trim().equals("Sau")) {
                     break;
                 }
+
+                Chap chap = new Chap();
+                chap.setName(title);
+                chap.setContent(chapContent);
+                chap.setStory(story);
+                chapRepository.save(chap);
+
             }
 
         } catch (Exception e) {
