@@ -1,7 +1,9 @@
 package com.phh.storyserver.schedual;
 
+import com.phh.storyserver.models.Author;
 import com.phh.storyserver.models.Chap;
 import com.phh.storyserver.models.Story;
+import com.phh.storyserver.repositories.AuthorRepository;
 import com.phh.storyserver.repositories.ChapRepository;
 import com.phh.storyserver.repositories.StoryRepository;
 import javafx.util.Pair;
@@ -43,6 +45,9 @@ public class StoryClawer {
 
     @Autowired
     private ChapRepository chapRepository;
+
+    @Autowired
+    private AuthorRepository authorRepository;
 
     @Scheduled(cron = "0 0 0 * * *")
     public void reportCurrentTime() {
@@ -114,8 +119,19 @@ public class StoryClawer {
 
             Elements infor = doc.select(".lww");
             Elements infor1 = infor.get(0).select("p");
+            int i = 0;
             infor1.stream().forEach(item -> {
                 try {
+                    String text = item.text();
+                    if(text.indexOf("Tác Giả") != -1) {
+                        String authorName = text.split(":")[1].trim();
+                        Author author = authorRepository.findByName(authorName);
+                        if(author == null) {
+                            author = new Author();
+                            author.setName(authorName);
+                            authorRepository.save(author);
+                        }
+                    }
                     out.write(item.text());
                     out.write(System.getProperty("line.separator"));
                 } catch (IOException e) {
