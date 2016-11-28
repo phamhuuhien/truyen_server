@@ -3,9 +3,11 @@ package com.phh.storyserver.schedual;
 import com.phh.storyserver.models.Author;
 import com.phh.storyserver.models.Chap;
 import com.phh.storyserver.models.Story;
+import com.phh.storyserver.models.Type;
 import com.phh.storyserver.repositories.AuthorRepository;
 import com.phh.storyserver.repositories.ChapRepository;
 import com.phh.storyserver.repositories.StoryRepository;
+import com.phh.storyserver.repositories.TypeRepository;
 import javafx.util.Pair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,10 +25,9 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by phhien on 10/21/2016.
@@ -48,6 +49,9 @@ public class StoryClawer {
 
     @Autowired
     private AuthorRepository authorRepository;
+
+    @Autowired
+    private TypeRepository typeRepository;
 
     @Scheduled(cron = "0 0 0 * * *")
     public void reportCurrentTime() {
@@ -132,6 +136,25 @@ public class StoryClawer {
                             authorRepository.save(author);
                         }
                     }
+
+                    HashSet<Type> hashSet = new HashSet<Type>();
+                    if(text.indexOf("Thể Loại") != -1) {
+                        Matcher m = Pattern.compile("\\<span>(.*?)\\</span>").matcher(item.toString());
+                        while (m.find()) {
+                            String typeName = m.group(1);
+                            Type type = typeRepository.findByName(typeName);
+                            if (type == null) {
+                                type = new Type();
+                                type.setName(typeName);
+                                typeRepository.save(type);
+                            }
+                            HashSet<Story> stories = new HashSet<Story>();
+                            stories.add(story);
+                            type.setStories(stories);
+                            hashSet.add(type);
+                        }
+                    }
+                    story.setTypes(hashSet);
                     out.write(item.text());
                     out.write(System.getProperty("line.separator"));
                 } catch (IOException e) {
