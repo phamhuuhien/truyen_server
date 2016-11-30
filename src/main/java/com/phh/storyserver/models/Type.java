@@ -1,6 +1,8 @@
 package com.phh.storyserver.models;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -9,7 +11,8 @@ import java.util.Set;
 /**
  * Created by phhien on 11/21/2016.
  */
-@Data
+@Setter
+@Getter
 @Entity
 public class Type {
 

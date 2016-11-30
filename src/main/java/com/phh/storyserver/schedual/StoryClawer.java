@@ -135,6 +135,8 @@ public class StoryClawer {
                             author.setName(authorName);
                             authorRepository.save(author);
                         }
+
+                        story.setAuthor_id(author.getId());
                     }
 
                     HashSet<Type> hashSet = new HashSet<Type>();
@@ -148,13 +150,10 @@ public class StoryClawer {
                                 type.setName(typeName);
                                 typeRepository.save(type);
                             }
-                            HashSet<Story> stories = new HashSet<Story>();
-                            stories.add(story);
-                            type.setStories(stories);
                             hashSet.add(type);
                         }
+                        story.setTypes(hashSet);
                     }
-                    story.setTypes(hashSet);
                     out.write(item.text());
                     out.write(System.getProperty("line.separator"));
                 } catch (IOException e) {
@@ -172,7 +171,7 @@ public class StoryClawer {
 
 
             story.setName(title);
-            story.setDes(desc);
+            story.setDes(desc.replace("http://truyenyy.com/", "ST"));
             storyRepository.save(story);
 
         } catch (IOException e) {
